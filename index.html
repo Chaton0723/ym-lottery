@@ -126,7 +126,8 @@
         const lineName = document.getElementById('lineName').value.trim();
         const praiseBro = document.getElementById('praiseBro').value.trim();
         const praiseSis = document.getElementById('praiseSis').value.trim();
-        const fileInput = document.getElementById('lightBoardImg');
+        
+        // 已經移除原本抓取圖片欄位的程式碼
         
         if(praiseBro.length < 15 || praiseSis.length < 15) {
             alert("誇誇內容字數不夠喔！請確保都至少15個字。");
@@ -139,14 +140,14 @@
             lineName: lineName,
             praiseBro: praiseBro,
             praiseSis: praiseSis,
-            hasImage: fileInput.files.length > 0 ? "已上傳" : "未上傳",
+            hasImage: "請至Google表單確認", // 這裡改為提示文字
             approved: false // 預設未核准，由後台人員打勾
         };
 
         entries.push(newEntry);
         localStorage.setItem('lottery_entries', JSON.stringify(entries));
         
-        alert("🎉 報名成功！祝您中獎！");
+        alert("🎉 報名文字資料已送出！\n\n請確認您是否已經點擊了「📸 點我前往表單上傳截圖」並完成上傳喔！祝您中獎！");
         this.reset();
     });
 
@@ -245,6 +246,5 @@
         }
     }
 </script>
-
 </body>
 </html>
