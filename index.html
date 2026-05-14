@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>芋泥寶寶專屬抽獎活動</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #ffe6f2; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1, h2 { color: #ff66a3; text-align: center; }
+        .prize-img { width: 100%; max-width: 400px; display: block; margin: 0 auto 20px; border-radius: 10px; border: 2px solid #ffb3d9; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
+        input[type="text"], textarea, input[type="file"], input[type="number"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        textarea { height: 80px; resize: vertical; }
+        .btn { background-color: #ff66a3; color: white; border: none; padding: 12px 20px; width: 100%; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn:hover { background-color: #ff3385; }
+        .nav-btns { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .nav-btn { background: none; border: none; color: #999; cursor: pointer; font-size: 14px; text-decoration: underline; }
+        .hidden { display: none; }
+        
+        /* 後台樣式 */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #ffb3d9; color: white; }
+        .draw-section { margin-top: 20px; padding: 15px; background: #fff0f5; border-radius: 10px; border: 1px dashed #ff66a3; }
+        #winners-list { margin-top: 15px; font-weight: bold; color: #d6005c; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="nav-btns">
+        <button class="nav-btn" onclick="showSection('frontend')">👉 返回報名頁面</button>
+        <button class="nav-btn" onclick="showSection('backend-login')">⚙️ 進入管理後台</button>
+    </div>
+
+    <!-- 前台報名頁面 -->
+    <div id="frontend">
+        <h1>芋泥寶寶與哥哥的粉絲抽獎</h1>
+        <img src="哥哥.jpg" alt="精美獎品" class="prize-img" onerror="this.style.display='none';">
+        <p style="text-align: center; color: #777;">完成以下條件，即可參與抽獎！名額有限，趕快行動！</p>
+        
+        <form id="lotteryForm">
+            <div class="form-group">
+                <label>1. 抖音 ID (必填)</label>
+                <input type="text" id="douyinId" required placeholder="請輸入您的抖音ID">
+            </div>
+            <div class="form-group">
+                <label>2. LINE 群內名稱 (必填)</label>
+                <input type="text" id="lineName" required placeholder="請輸入LINE群暱稱">
+            </div>
+            <div class="form-group">
+                <label>3. 上傳燈牌照片 (需在5級以上且完整截圖)</label>
+                <input type="file" id="lightBoardImg" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <label>4. 誇誇芋泥寶寶 or 哥哥 (必填，至少15字)</label>
+                <textarea id="praiseBro" required minlength="15" placeholder="請盡情誇誇，最少15個字喔！"></textarea>
+            </div>
+            <div class="form-group">
+                <label>5. 誇誇提供的獎品姊姊 (必填，至少15字)</label>
+                <textarea id="praiseSis" required minlength="15" placeholder="謝謝姊姊提供獎品，請誇誇姊姊，最少15個字！"></textarea>
+            </div>
+            <button type="submit" class="btn">🚀 送出報名資料</button>
+        </form>
+    </div>
+
+    <!-- 後台登入頁面 -->
+    <div id="backend-login" class="hidden">
+        <h2>管理後台登入</h2>
+        <div class="form-group">
+            <label>請輸入管理員密碼：</label>
+            <input type="password" id="adminPwd" placeholder="輸入密碼進入後台">
+        </div>
+        <button class="btn" onclick="checkPassword()">登入</button>
+    </div>
+
+    <!-- 後台管理與抽獎頁面 -->
+    <div id="backend-panel" class="hidden">
+        <h2>後台抽獎管理系統</h2>
+        <p>目前報名人數：<span id="total-entries">0</span> 人</p>
+        
+        <div style="overflow-x: auto;">
+            <table id="entriesTable">
+                <thead>
+                    <tr>
+                        <th>核准</th>
+                        <th>抖音ID</th>
+                        <th>LINE名稱</th>
+                        <th>誇寶寶/哥哥</th>
+                        <th>誇姊姊</th>
+                    </tr>
+                </thead>
+                <tbody id="entriesBody">
+                    <!-- 資料將透過 JS 產生於此 -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="draw-section">
+            <div class="form-group">
+                <label>設定抽出名額：</label>
+                <input type="number" id="prizeCount" value="8" min="1">
+            </div>
+            <button class="btn" onclick="executeDraw()" style="background-color: #ff3385;">🎉 開始抽獎</button>
+            <div id="winners-list"></div>
+        </div>
+        <br>
+        <button class="btn" onclick="clearData()" style="background-color: #ccc; color: #333;">清除所有報名資料(測試用)</button>
+    </div>
+
+</div>
+
+<script>
+    // 模擬資料庫：使用瀏覽器的 localStorage
+    let entries = JSON.parse(localStorage.getItem('lottery_entries')) || [];
+
+    // 前台表單送出邏輯
+    document.getElementById('lotteryForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const douyinId = document.getElementById('douyinId').value.trim();
+        const lineName = document.getElementById('lineName').value.trim();
+        const praiseBro = document.getElementById('praiseBro').value.trim();
+        const praiseSis = document.getElementById('praiseSis').value.trim();
+        const fileInput = document.getElementById('lightBoardImg');
+        
+        if(praiseBro.length < 15 || praiseSis.length < 15) {
+            alert("誇誇內容字數不夠喔！請確保都至少15個字。");
+            return;
+        }
+
+        const newEntry = {
+            id: Date.now(),
+            douyinId: douyinId,
+            lineName: lineName,
+            praiseBro: praiseBro,
+            praiseSis: praiseSis,
+            hasImage: fileInput.files.length > 0 ? "已上傳" : "未上傳",
+            approved: false // 預設未核准，由後台人員打勾
+        };
+
+        entries.push(newEntry);
+        localStorage.setItem('lottery_entries', JSON.stringify(entries));
+        
+        alert("🎉 報名成功！祝您中獎！");
+        this.reset();
+    });
+
+    // 切換顯示區塊
+    function showSection(sectionId) {
+        document.getElementById('frontend').classList.add('hidden');
+        document.getElementById('backend-login').classList.add('hidden');
+        document.getElementById('backend-panel').classList.add('hidden');
+        document.getElementById(sectionId).classList.remove('hidden');
+        
+        if(sectionId === 'backend-panel') {
+            renderTable();
+        }
+    }
+
+    // 密碼驗證
+    function checkPassword() {
+        const pwd = document.getElementById('adminPwd').value;
+        if(pwd === "芋泥寶寶最可愛") {
+            document.getElementById('adminPwd').value = "";
+            showSection('backend-panel');
+        } else {
+            alert("密碼錯誤，請重新輸入！");
+        }
+    }
+
+    // 渲染後台表格
+    function renderTable() {
+        const tbody = document.getElementById('entriesBody');
+        document.getElementById('total-entries').innerText = entries.length;
+        tbody.innerHTML = "";
+
+        entries.forEach((entry, index) => {
+            const tr = document.createElement('tr');
+            
+            // 審核 Checkbox
+            const tdCheck = document.createElement('td');
+            const checkbox = document.createElement('input');
+            checkbox.type = "checkbox";
+            checkbox.checked = entry.approved;
+            checkbox.onchange = function() {
+                entries[index].approved = this.checked;
+                localStorage.setItem('lottery_entries', JSON.stringify(entries));
+            };
+            tdCheck.appendChild(checkbox);
+
+            tr.innerHTML = `
+                <td></td>
+                <td>${entry.douyinId}</td>
+                <td>${entry.lineName}</td>
+                <td style="font-size:12px; color:#555;">${entry.praiseBro}</td>
+                <td style="font-size:12px; color:#555;">${entry.praiseSis}</td>
+            `;
+            tr.children[0].appendChild(checkbox);
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 抽獎邏輯
+    function executeDraw() {
+        const count = parseInt(document.getElementById('prizeCount').value);
+        // 過濾出有被打勾 (審核通過) 的名單
+        const validEntries = entries.filter(e => e.approved);
+
+        if(validEntries.length === 0) {
+            alert("目前沒有任何『已打勾核准』的合格名單可以抽獎！");
+            return;
+        }
+
+        if(count > validEntries.length) {
+            alert(`注意：設定抽出的數量(${count})大於合格人數(${validEntries.length})，將直接讓所有合格者得獎。`);
+        }
+
+        // 隨機打亂陣列順序並抽取
+        const shuffled = validEntries.sort(() => 0.5 - Math.random());
+        const winners = shuffled.slice(0, count);
+
+        // 顯示結果
+        let resultHTML = `<h3>🎊 恭喜以下得獎者 (${winners.length}名) 🎊</h3><ul>`;
+        winners.forEach(w => {
+            resultHTML += `<li>抖音: ${w.douyinId} / LINE: ${w.lineName}</li>`;
+        });
+        resultHTML += `</ul>`;
+
+        document.getElementById('winners-list').innerHTML = resultHTML;
+    }
+
+    // 清除資料 (測試用)
+    function clearData() {
+        if(confirm("確定要清空所有報名資料嗎？這個動作無法復原！")) {
+            localStorage.removeItem('lottery_entries');
+            entries = [];
+            renderTable();
+            document.getElementById('winners-list').innerHTML = "";
+            alert("資料已清空！");
+        }
+    }
+</script>
+
+</body>
+</html>
