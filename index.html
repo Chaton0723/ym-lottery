@@ -13,8 +13,11 @@
         label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
         input[type="text"], textarea, input[type="file"], input[type="number"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         textarea { height: 80px; resize: vertical; }
-        .btn { background-color: #ff66a3; color: white; border: none; padding: 12px 20px; width: 100%; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn { background-color: #ff66a3; color: white; border: none; padding: 12px 20px; width: 100%; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; transition: 0.3s; display: block; box-sizing: border-box; text-align: center; }
         .btn:hover { background-color: #ff3385; }
+        .btn-link { background-color: #ff99c2; text-decoration: none; margin-bottom: 5px; }
+        .btn-link:hover { background-color: #ff66a3; }
+        .notice { font-size: 13px; color: #d6005c; margin-top: 5px; margin-bottom: 10px; font-weight: bold; }
         .nav-btns { display: flex; justify-content: space-between; margin-bottom: 20px; }
         .nav-btn { background: none; border: none; color: #999; cursor: pointer; font-size: 14px; text-decoration: underline; }
         .hidden { display: none; }
@@ -31,15 +34,14 @@
 
 <div class="container">
     <div class="nav-btns">
-        <button class="nav-btn" onclick="showSection('frontend')">👉 返回報名頁面</button>
-        <button class="nav-btn" onclick="showSection('backend-login')">⚙️ 進入管理後台</button>
+        <button class="nav-btn" onclick="window.showSection('frontend')">👉 返回報名頁面</button>
+        <button class="nav-btn" onclick="window.showSection('backend-login')">⚙️ 進入管理後台</button>
     </div>
 
-    <!-- 前台報名頁面 -->
     <div id="frontend">
         <h1>芋泥寶寶與哥哥的粉絲抽獎</h1>
         <img src="哥哥.jpg" alt="精美獎品" class="prize-img" onerror="this.style.display='none';">
-        <p style="text-align: center; color: #777;">完成以下條件，即可參與抽獎！名額有限，趕快行動！</p>
+        <p style="text-align: center; color: #777; margin-bottom: 25px;">完成以下條件，即可參與抽獎！名額有限，趕快行動！</p>
         
         <form id="lotteryForm">
             <div class="form-group">
@@ -50,12 +52,13 @@
                 <label>2. LINE 群內名稱 (必填)</label>
                 <input type="text" id="lineName" required placeholder="請輸入LINE群暱稱">
             </div>
-<!-- 修改為 Google 表單連結區塊 -->
+            
             <div class="form-group" style="background-color: #fff0f5; padding: 15px; border-radius: 10px; border: 1px dashed #ff66a3;">
                 <label>3. 上傳燈牌照片 (需在5級以上且完整截圖)</label>
                 <p class="notice">※ 點擊下方按鈕前往表單上傳截圖，上傳完畢後請務必回來這裡送出資料喔！</p>
                 <a href="https://docs.google.com/forms/d/e/1FAIpQLSeX4gXRTD8SE3ggBGVHEhPLC0m0JaH4xOdaJ5IyHCVlVzJDOA/viewform?usp=publish-editor" target="_blank" class="btn btn-link">📸 點我前往表單上傳截圖</a>
             </div>
+
             <div class="form-group">
                 <label>4. 誇誇芋泥寶寶 or 哥哥 (必填，至少15字)</label>
                 <textarea id="praiseBro" required minlength="15" placeholder="請盡情誇誇，最少15個字喔！"></textarea>
@@ -68,17 +71,15 @@
         </form>
     </div>
 
-    <!-- 後台登入頁面 -->
     <div id="backend-login" class="hidden">
         <h2>管理後台登入</h2>
         <div class="form-group">
             <label>請輸入管理員密碼：</label>
             <input type="password" id="adminPwd" placeholder="輸入密碼進入後台">
         </div>
-        <button class="btn" onclick="checkPassword()">登入</button>
+        <button class="btn" onclick="window.checkPassword()">登入</button>
     </div>
 
-    <!-- 後台管理與抽獎頁面 -->
     <div id="backend-panel" class="hidden">
         <h2>後台抽獎管理系統</h2>
         <p>目前報名人數：<span id="total-entries">0</span> 人</p>
@@ -95,8 +96,7 @@
                     </tr>
                 </thead>
                 <tbody id="entriesBody">
-                    <!-- 資料將透過 JS 產生於此 -->
-                </tbody>
+                    </tbody>
             </table>
         </div>
 
@@ -105,111 +105,154 @@
                 <label>設定抽出名額：</label>
                 <input type="number" id="prizeCount" value="8" min="1">
             </div>
-            <button class="btn" onclick="executeDraw()" style="background-color: #ff3385;">🎉 開始抽獎</button>
+            <button class="btn" onclick="window.executeDraw()" style="background-color: #ff3385;">🎉 開始抽獎</button>
             <div id="winners-list"></div>
         </div>
         <br>
-        <button class="btn" onclick="clearData()" style="background-color: #ccc; color: #333;">清除所有報名資料(測試用)</button>
+        <button class="btn" onclick="window.clearData()" style="background-color: #ccc; color: #333;">清除所有報名資料(測試用)</button>
     </div>
-
 </div>
 
-<script>
-    // 模擬資料庫：使用瀏覽器的 localStorage
-    let entries = JSON.parse(localStorage.getItem('lottery_entries')) || [];
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // 前台表單送出邏輯
-    document.getElementById('lotteryForm').addEventListener('submit', function(e) {
+    // 這是你剛剛截圖裡的金鑰，已經幫你放進來了
+    const firebaseConfig = {
+        apiKey: "AIzaSyBoKnkJma1VC_iDwhrcn0A1KlC0N2_au20",
+        authDomain: "ymmmm-ffe24.firebaseapp.com",
+        projectId: "ymmmm-ffe24",
+        storageBucket: "ymmmm-ffe24.firebasestorage.app",
+        messagingSenderId: "424875315964",
+        appId: "1:424875315964:web:e0c4e636c95daeaff9fd79"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const dbCollection = collection(db, "lottery_entries");
+
+    let entries = [];
+
+    // 前台表單送出邏輯 (寫入雲端)
+    document.getElementById('lotteryForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.innerText = "資料寫入雲端中...";
+        submitBtn.disabled = true;
+
         const douyinId = document.getElementById('douyinId').value.trim();
         const lineName = document.getElementById('lineName').value.trim();
         const praiseBro = document.getElementById('praiseBro').value.trim();
         const praiseSis = document.getElementById('praiseSis').value.trim();
         
-        // 已經移除原本抓取圖片欄位的程式碼
-        
         if(praiseBro.length < 15 || praiseSis.length < 15) {
             alert("誇誇內容字數不夠喔！請確保都至少15個字。");
+            submitBtn.innerText = "🚀 送出報名資料";
+            submitBtn.disabled = false;
             return;
         }
 
-        const newEntry = {
-            id: Date.now(),
-            douyinId: douyinId,
-            lineName: lineName,
-            praiseBro: praiseBro,
-            praiseSis: praiseSis,
-            hasImage: "請至Google表單確認", // 這裡改為提示文字
-            approved: false // 預設未核准，由後台人員打勾
-        };
+        try {
+            await addDoc(dbCollection, {
+                douyinId: douyinId,
+                lineName: lineName,
+                praiseBro: praiseBro,
+                praiseSis: praiseSis,
+                approved: false,
+                timestamp: Date.now()
+            });
 
-        entries.push(newEntry);
-        localStorage.setItem('lottery_entries', JSON.stringify(entries));
-        
-        alert("🎉 報名文字資料已送出！\n\n請確認您是否已經點擊了「📸 點我前往表單上傳截圖」並完成上傳喔！祝您中獎！");
-        this.reset();
+            alert("🎉 報名文字資料已送出！\n\n請確認您是否已經點擊了「📸 點我前往表單上傳截圖」並完成上傳喔！祝您中獎！");
+            this.reset();
+        } catch (error) {
+            console.error("寫入錯誤:", error);
+            alert("資料傳送失敗，請稍後再試。");
+        } finally {
+            submitBtn.innerText = "🚀 送出報名資料";
+            submitBtn.disabled = false;
+        }
     });
 
-    // 切換顯示區塊
-    function showSection(sectionId) {
+    // 取得資料庫所有名單並渲染表格
+    async function fetchEntries() {
+        const tbody = document.getElementById('entriesBody');
+        tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>資料載入中...</td></tr>";
+        
+        try {
+            const querySnapshot = await getDocs(dbCollection);
+            entries = [];
+            querySnapshot.forEach((doc) => {
+                entries.push({ id: doc.id, ...doc.data() });
+            });
+            
+            document.getElementById('total-entries').innerText = entries.length;
+            tbody.innerHTML = "";
+
+            if(entries.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>目前尚無報名資料</td></tr>";
+                return;
+            }
+
+            entries.forEach((entry, index) => {
+                const tr = document.createElement('tr');
+                
+                const tdCheck = document.createElement('td');
+                const checkbox = document.createElement('input');
+                checkbox.type = "checkbox";
+                checkbox.checked = entry.approved;
+                checkbox.onchange = async function() {
+                    const originalState = entries[index].approved;
+                    entries[index].approved = this.checked;
+                    try {
+                        const entryRef = doc(db, "lottery_entries", entry.id);
+                        await updateDoc(entryRef, { approved: this.checked });
+                    } catch(err) {
+                        console.error("更新狀態失敗:", err);
+                        alert("狀態更新失敗，請檢查連線！");
+                        this.checked = originalState;
+                        entries[index].approved = originalState;
+                    }
+                };
+                tdCheck.appendChild(checkbox);
+
+                tr.innerHTML = `
+                    <td></td>
+                    <td>${entry.douyinId}</td>
+                    <td>${entry.lineName}</td>
+                    <td style="font-size:12px; color:#555;">${entry.praiseBro}</td>
+                    <td style="font-size:12px; color:#555;">${entry.praiseSis}</td>
+                `;
+                tr.children[0].appendChild(checkbox);
+                tbody.appendChild(tr);
+            });
+        } catch (error) {
+            console.error("讀取資料失敗:", error);
+            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; color:red;'>資料讀取失敗，可能是資料庫權限未設定</td></tr>";
+        }
+    }
+
+    // 掛載函數
+    window.showSection = function(sectionId) {
         document.getElementById('frontend').classList.add('hidden');
         document.getElementById('backend-login').classList.add('hidden');
         document.getElementById('backend-panel').classList.add('hidden');
         document.getElementById(sectionId).classList.remove('hidden');
-        
-        if(sectionId === 'backend-panel') {
-            renderTable();
-        }
-    }
+    };
 
-    // 密碼驗證
-    function checkPassword() {
+    window.checkPassword = function() {
         const pwd = document.getElementById('adminPwd').value;
         if(pwd === "芋泥寶寶最可愛") {
             document.getElementById('adminPwd').value = "";
-            showSection('backend-panel');
+            window.showSection('backend-panel');
+            fetchEntries(); // 進入後台時自動載入雲端名單
         } else {
             alert("密碼錯誤，請重新輸入！");
         }
-    }
+    };
 
-    // 渲染後台表格
-    function renderTable() {
-        const tbody = document.getElementById('entriesBody');
-        document.getElementById('total-entries').innerText = entries.length;
-        tbody.innerHTML = "";
-
-        entries.forEach((entry, index) => {
-            const tr = document.createElement('tr');
-            
-            // 審核 Checkbox
-            const tdCheck = document.createElement('td');
-            const checkbox = document.createElement('input');
-            checkbox.type = "checkbox";
-            checkbox.checked = entry.approved;
-            checkbox.onchange = function() {
-                entries[index].approved = this.checked;
-                localStorage.setItem('lottery_entries', JSON.stringify(entries));
-            };
-            tdCheck.appendChild(checkbox);
-
-            tr.innerHTML = `
-                <td></td>
-                <td>${entry.douyinId}</td>
-                <td>${entry.lineName}</td>
-                <td style="font-size:12px; color:#555;">${entry.praiseBro}</td>
-                <td style="font-size:12px; color:#555;">${entry.praiseSis}</td>
-            `;
-            tr.children[0].appendChild(checkbox);
-            tbody.appendChild(tr);
-        });
-    }
-
-    // 抽獎邏輯
-    function executeDraw() {
+    window.executeDraw = function() {
         const count = parseInt(document.getElementById('prizeCount').value);
-        // 過濾出有被打勾 (審核通過) 的名單
         const validEntries = entries.filter(e => e.approved);
 
         if(validEntries.length === 0) {
@@ -221,11 +264,9 @@
             alert(`注意：設定抽出的數量(${count})大於合格人數(${validEntries.length})，將直接讓所有合格者得獎。`);
         }
 
-        // 隨機打亂陣列順序並抽取
         const shuffled = validEntries.sort(() => 0.5 - Math.random());
         const winners = shuffled.slice(0, count);
 
-        // 顯示結果
         let resultHTML = `<h3>🎊 恭喜以下得獎者 (${winners.length}名) 🎊</h3><ul>`;
         winners.forEach(w => {
             resultHTML += `<li>抖音: ${w.douyinId} / LINE: ${w.lineName}</li>`;
@@ -233,18 +274,24 @@
         resultHTML += `</ul>`;
 
         document.getElementById('winners-list').innerHTML = resultHTML;
-    }
+    };
 
-    // 清除資料 (測試用)
-    function clearData() {
-        if(confirm("確定要清空所有報名資料嗎？這個動作無法復原！")) {
-            localStorage.removeItem('lottery_entries');
-            entries = [];
-            renderTable();
-            document.getElementById('winners-list').innerHTML = "";
-            alert("資料已清空！");
+    window.clearData = async function() {
+        if(confirm("確定要清空雲端的所有報名資料嗎？這個動作無法復原！")) {
+            try {
+                for (const entry of entries) {
+                    await deleteDoc(doc(db, "lottery_entries", entry.id));
+                }
+                alert("雲端資料已全數清空！");
+                fetchEntries();
+                document.getElementById('winners-list').innerHTML = "";
+            } catch (error) {
+                console.error("刪除失敗:", error);
+                alert("刪除資料時發生錯誤。");
+            }
         }
-    }
+    };
 </script>
+
 </body>
 </html>
